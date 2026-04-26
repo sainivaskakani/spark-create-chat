@@ -1,6 +1,11 @@
 import { useCallback, useRef, useState } from "react";
 
-type Msg = { role: "user" | "assistant" | "system"; content: string };
+type Msg = {
+  role: "user" | "assistant" | "system";
+  content: string;
+  images?: string[];
+  pdfText?: string;
+};
 
 export function useChatStream() {
   const [isStreaming, setIsStreaming] = useState(false);

@@ -1,6 +1,7 @@
-import { Plus, MessageSquare, Trash2, Sparkles, X } from "lucide-react";
+import { Plus, MessageSquare, Trash2, Sparkles, X, Search, Download, Sun, Moon } from "lucide-react";
 import type { Conversation } from "@/lib/chat-storage";
 import { cn } from "@/lib/utils";
+import { useMemo, useState } from "react";
 
 type Props = {
   conversations: Conversation[];
@@ -8,6 +9,9 @@ type Props = {
   onSelect: (id: string) => void;
   onNew: () => void;
   onDelete: (id: string) => void;
+  onExport: () => void;
+  onToggleTheme: () => void;
+  theme: "dark" | "light";
   open: boolean;
   onClose: () => void;
 };
@@ -18,12 +22,26 @@ export function ChatSidebar({
   onSelect,
   onNew,
   onDelete,
+  onExport,
+  onToggleTheme,
+  theme,
   open,
   onClose,
 }: Props) {
+  const [q, setQ] = useState("");
+
+  const filtered = useMemo(() => {
+    if (!q.trim()) return conversations;
+    const term = q.toLowerCase();
+    return conversations.filter(
+      (c) =>
+        c.title.toLowerCase().includes(term) ||
+        c.messages.some((m) => m.content.toLowerCase().includes(term)),
+    );
+  }, [q, conversations]);
+
   return (
     <>
-      {/* Mobile overlay */}
       <div
         className={cn(
           "fixed inset-0 z-30 bg-background/60 backdrop-blur-sm transition-opacity md:hidden",
@@ -44,16 +62,26 @@ export function ChatSidebar({
             </div>
             <span className="font-display text-base font-semibold tracking-tight">Nova</span>
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-md p-1.5 text-sidebar-foreground/70 hover:bg-sidebar-accent md:hidden"
-            aria-label="Close sidebar"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onToggleTheme}
+              className="rounded-md p-1.5 text-sidebar-foreground/70 hover:bg-sidebar-accent"
+              aria-label="Toggle theme"
+              title="Toggle theme"
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+            <button
+              onClick={onClose}
+              className="rounded-md p-1.5 text-sidebar-foreground/70 hover:bg-sidebar-accent md:hidden"
+              aria-label="Close sidebar"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
-        <div className="p-3">
+        <div className="space-y-2 p-3">
           <button
             onClick={onNew}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-sidebar-border bg-sidebar-accent/40 px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-all hover:bg-sidebar-accent hover:glow"
@@ -61,16 +89,25 @@ export function ChatSidebar({
             <Plus className="h-4 w-4" />
             New chat
           </button>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-sidebar-foreground/50" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search chats…"
+              className="w-full rounded-lg border border-sidebar-border bg-sidebar-accent/30 py-1.5 pl-8 pr-2 text-xs text-sidebar-foreground placeholder:text-sidebar-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-2 pb-3">
-          {conversations.length === 0 ? (
+          {filtered.length === 0 ? (
             <p className="px-3 py-6 text-center text-xs text-sidebar-foreground/50">
-              Your conversations will appear here.
+              {q ? "No matches." : "Your conversations will appear here."}
             </p>
           ) : (
             <ul className="space-y-0.5">
-              {conversations.map((c) => {
+              {filtered.map((c) => {
                 const isActive = c.id === activeId;
                 return (
                   <li key={c.id}>
@@ -107,8 +144,16 @@ export function ChatSidebar({
           )}
         </div>
 
-        <div className="border-t border-sidebar-border p-3 text-[11px] text-sidebar-foreground/50">
-          Powered by Lovable AI · Gemini & GPT-5
+        <div className="border-t border-sidebar-border p-3">
+          <button
+            onClick={onExport}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-sidebar-accent/40 py-2 text-xs text-sidebar-foreground/80 hover:bg-sidebar-accent"
+          >
+            <Download className="h-3.5 w-3.5" /> Export current chat
+          </button>
+          <p className="mt-2 text-center text-[11px] text-sidebar-foreground/50">
+            Powered by Lovable AI
+          </p>
         </div>
       </aside>
     </>

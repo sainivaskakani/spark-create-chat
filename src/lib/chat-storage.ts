@@ -1,10 +1,22 @@
 export type ChatRole = "user" | "assistant" | "system";
 
+export type Attachment = {
+  kind: "image" | "pdf";
+  name: string;
+  // For images: data URL (preview + sent to model)
+  // For PDFs: omitted (we only keep extracted text)
+  dataUrl?: string;
+  // Extracted text snippet (PDFs)
+  text?: string;
+  size?: number;
+};
+
 export type ChatMessage = {
   id: string;
   role: ChatRole;
   content: string;
   imageUrl?: string;
+  attachments?: Attachment[];
   createdAt: number;
 };
 
